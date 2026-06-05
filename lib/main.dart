@@ -3,7 +3,7 @@ import 'package:eduspace_mobile/views/sharedspaces/SharedSpacesPage.dart';
 import 'package:eduspace_mobile/views/teachers/TeachersManagementPage.dart';
 import 'package:flutter/material.dart';
 import 'routes/routes.dart';
-import 'views/iam/LoginPage.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 void main() {
   runApp(const MyApp());
@@ -16,8 +16,11 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      initialRoute: '/login',
+      initialRoute: '/welcome',
       routes: appRoutes,
+      theme: ThemeData(
+        fontFamily: GoogleFonts.poppins().fontFamily,
+      ),
     );
   }
 }
