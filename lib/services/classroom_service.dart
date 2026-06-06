@@ -2,10 +2,12 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../config/ApiConfig.dart';
 import '../models/classroom.dart';
+import '../utils/token_utils.dart';
 
 class ClassroomService {
   Future<List<Classroom>> getAllClassrooms() async {
-    final response = await http.get(Uri.parse(ApiConfig.classrooms));
+    final headers = await getAuthHeaders();
+    final response = await http.get(Uri.parse(ApiConfig.classrooms), headers: headers);
     if (response.statusCode == 200) {
       final List<dynamic> data = json.decode(response.body);
       return data.map((json) => Classroom.fromJson(json)).toList();
