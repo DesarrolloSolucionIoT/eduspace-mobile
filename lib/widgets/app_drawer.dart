@@ -10,6 +10,8 @@ class AppDrawer extends StatelessWidget {
   Future<void> _logout(BuildContext context) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('auth_token');
+    await prefs.remove('user_role');
+    await prefs.remove('profile_id');
     Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
   }
 
@@ -69,7 +71,7 @@ class AppDrawer extends StatelessWidget {
               ),
             ),
           ),
-          buildTile(icon: Icons.home, title: 'Home', route: '/'),
+          buildTile(icon: Icons.home, title: 'Home', route: '/admin/home'),
           buildTile(icon: Icons.meeting_room, title: 'Classrooms', route: '/classrooms'),
           buildTile(icon: Icons.group_work, title: 'Shared Spaces', route: '/shared-spaces'),
           buildTile(icon: Icons.event, title: 'Meetings', route: '/meetings'),

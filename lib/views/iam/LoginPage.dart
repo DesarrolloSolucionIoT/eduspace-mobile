@@ -1,7 +1,7 @@
-import 'package:eduspace_mobile/views/home/HomePage.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../services/auth_service.dart';
+import '../../utils/token_utils.dart';
 import 'RegisterPage.dart';
 
 class LoginPage extends StatefulWidget {
@@ -31,11 +31,18 @@ class _LoginPageState extends State<LoginPage> {
 
     if (result != null && result['token'] != null) {
       final prefs = await SharedPreferences.getInstance();
-      await prefs.setString('auth_token', result['token']);
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const HomePage()),
-      );
+      await prefs.setString(kAuthToken, result['token']);
+
+      final role = result['role'] as String?;
+      if (role != null) await prefs.setString(kUserRole, role);
+
+      final profileId = result['profileId'];
+      if (profileId is int) await prefs.setInt(kProfileId, profileId);
+
+      if (!mounted) return;
+      // Routing por rol: admin → flujo de gestión; docente → shell con tabs.
+      final route = role == roleAdmin ? '/admin/home' : '/';
+      Navigator.pushReplacementNamed(context, route);
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Credenciales incorrectas')),

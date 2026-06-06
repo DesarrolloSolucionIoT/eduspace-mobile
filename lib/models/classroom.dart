@@ -3,31 +3,33 @@ class Classroom {
   final String name;
   final String description;
   final int teacherId;
+  final String? zoneId;
 
   Classroom({
     this.id,
     required this.name,
     required this.description,
     required this.teacherId,
+    this.zoneId,
   });
 
   factory Classroom.fromJson(Map<String, dynamic> json) {
     return Classroom(
-      id: json['id'] != null ? json['id'] as int : null,
+      id: json['id'] as int?,
       name: json['name'] as String,
       description: json['description'] as String,
       teacherId: json['teacherId'] as int,
+      zoneId: json['zoneId'] as String?,
     );
   }
 
   Map<String, dynamic> toJson({bool includeId = false}) {
-    final data = {
+    final data = <String, dynamic>{
       'name': name,
       'description': description,
     };
-    if (includeId && id != null) {
-      data['id'] = id!.toString();
-    }
+    if (zoneId != null) data['zoneId'] = zoneId;
+    if (includeId && id != null) data['id'] = id.toString();
     return data;
   }
 }

@@ -26,4 +26,9 @@ class ApiConfig {
 
   // Meetings endpoints
   static const String meetings = '$baseUrl/meetings';
+
+  // IoT Monitoring endpoints
+  static const String sensorReadings = '$baseUrl/sensor-readings';
+  static String latestReadingByZone(String zoneId) => '$sensorReadings/zone/$zoneId/latest';
+  static String readingsByZone(String zoneId) => '$sensorReadings/zone/$zoneId';
 }
