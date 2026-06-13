@@ -2,10 +2,15 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../config/ApiConfig.dart';
 import '../models/meeting.dart';
+import '../utils/token_utils.dart';
 
 class MeetingsService {
   Future<List<Meeting>> getAllMeetings() async {
-    final response = await http.get(Uri.parse(ApiConfig.meetings));
+    final headers = await getAuthHeaders();
+
+    final response = await http.get(Uri.parse(ApiConfig.meetings),
+      headers: headers,
+    );
     if (response.statusCode == 200) {
       final List<dynamic> data = json.decode(response.body);
       return data.map((json) => Meeting.fromJson(json)).toList();

@@ -102,9 +102,9 @@ class NotificationsPage extends StatelessWidget {
         MaterialPageRoute(
           builder: (_) => ClassroomDetailPage(
             classroom: Classroom(id: 1, name: 'Aula L-204', description: '', teacherId: 0),
-            sensors: SensorReading(temperature: 28, humidity: 50, occupancy: 35, maxCapacity: 30, status: 'alert'),
+            sensors: SensorReading(temperature: 28, humidity: 50, occupancyPresent: true, alertLedState: 1)
           ),
-        ),
+          ),
       );
     }
   }

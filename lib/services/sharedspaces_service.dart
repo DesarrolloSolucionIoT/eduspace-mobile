@@ -2,10 +2,13 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../models/sharedspace.dart';
 import '../config/ApiConfig.dart';
+import '../utils/token_utils.dart';
 
 class SharedSpacesService {
   Future<List<SharedSpace>> getAllSharedSpaces() async {
-    final response = await http.get(Uri.parse(ApiConfig.sharedSpaces));
+    final headers = await getAuthHeaders();
+
+    final response = await http.get(Uri.parse(ApiConfig.sharedSpaces), headers: headers);
     if (response.statusCode == 200) {
       final List<dynamic> data = json.decode(response.body);
       return data.map((json) => SharedSpace.fromJson(json)).toList();

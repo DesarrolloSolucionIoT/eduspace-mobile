@@ -1,7 +1,7 @@
 class ApiConfig {
   // Base URL for the API
 
-  static const String baseUrl = 'http://10.0.2.2:5204/api/v1';
+static const String baseUrl = "http://10.0.2.2:5204/api/v1";
 
 
 

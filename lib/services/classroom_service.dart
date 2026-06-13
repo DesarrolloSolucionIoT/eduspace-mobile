@@ -6,6 +6,7 @@ import '../utils/token_utils.dart';
 
 class ClassroomService {
   Future<List<Classroom>> getAllClassrooms() async {
+
     final headers = await getAuthHeaders();
     final response = await http.get(Uri.parse(ApiConfig.classrooms), headers: headers);
     if (response.statusCode == 200) {
