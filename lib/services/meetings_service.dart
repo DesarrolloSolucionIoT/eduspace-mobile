@@ -15,6 +15,7 @@ class MeetingsService {
       final List<dynamic> data = json.decode(response.body);
       return data.map((json) => Meeting.fromJson(json)).toList();
     } else {
+      print('Status: ${response.statusCode}, Body: ${response.body}');
       throw Exception('Error al obtener las reuniones');
     }
   }

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../views/iam/LoginPage.dart';
-import '../views/iam/RegisterPage.dart';
 import '../views/shell/MainShell.dart';
 import '../views/iot/ClassroomDetailPage.dart';
 import '../views/iot/ResourceDetailPage.dart';
@@ -19,12 +18,10 @@ import '../views/meetings/MeetingsPage.dart';
 import '../views/home/HomePage.dart';
 
 final Map<String, WidgetBuilder> appRoutes = {
-  '/': (context) => const MainShell(),
-  '/login': (context) => LoginPage(),
-  '/register': (context) => RegisterPage(),
+  '/login': (context) => const LoginPage(),
 
   // Teacher shell
-  '/home': (context) => const MainShell(initialIndex: 0),
+  '/shell': (context) => const MainShell(initialIndex: 0),
   '/iot': (context) => const MainShell(initialIndex: 1),
   '/agenda': (context) => const MainShell(initialIndex: 2),
   '/profile': (context) => const MainShell(initialIndex: 3),

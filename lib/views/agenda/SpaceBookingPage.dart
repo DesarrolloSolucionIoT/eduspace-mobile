@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import '../../config/AppTheme.dart';
 import '../../widgets/gradient_scaffold.dart';
 import '../../models/sharedspace.dart';
 import '../../services/sharedspaces_service.dart';
+import '../../utils/token_utils.dart';
+
 
 class SpaceBookingPage extends StatefulWidget {
   const SpaceBookingPage({super.key});
@@ -41,10 +44,22 @@ class _SpaceBookingPageState extends State<SpaceBookingPage> {
                 if (snap.hasError || !snap.hasData || snap.data!.isEmpty) {
                   return _emptyState();
                 }
+
+                var spaces = snap.data ?? [];
+                if (_selectedFilter != 'Todos') {
+                  spaces = spaces.where((s) => 
+                    s.name.toLowerCase().contains(_selectedFilter.toLowerCase())
+                  ).toList();
+                }
+
+                if (spaces.isEmpty) {
+                  return _emptyState();
+                }
+
                 return ListView.builder(
                   padding: const EdgeInsets.fromLTRB(20, 4, 20, 20),
-                  itemCount: snap.data!.length,
-                  itemBuilder: (context, i) => _spaceCard(context, snap.data![i]),
+                  itemCount: spaces.length,
+                  itemBuilder: (context, i) => _spaceCard(context, spaces[i]),
                 );
               },
             ),
@@ -63,7 +78,10 @@ class _SpaceBookingPageState extends State<SpaceBookingPage> {
         children: _filters.map((f) {
           final active = f == _selectedFilter;
           return GestureDetector(
-            onTap: () => setState(() => _selectedFilter = f),
+            onTap: () => setState(() { 
+              _selectedFilter = f; 
+              _spacesFuture = SharedSpacesService().getAllSharedSpaces();
+              }),
             child: Container(
               margin: const EdgeInsets.only(right: 10, top: 8, bottom: 8),
               padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -127,19 +145,50 @@ class _AvailabilityPage extends StatefulWidget {
 
   @override
   State<_AvailabilityPage> createState() => _AvailabilityPageState();
+
 }
 
 class _AvailabilityPageState extends State<_AvailabilityPage> {
-  final _slots = ['08:00', '09:00', '10:00', '11:00', '12:00', '13:00'];
-  final _taken = {'08:00', '12:00'};
-  String? _selected = '10:00';
+  DateTime _selectedDate = DateTime.now();
+  List<SharedSpaceReservation> _reservations = [];
+  List<String> _allSlots = [];
+  String? _selectedSlot;
   final _reasonController = TextEditingController();
+  bool _loading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadReservations();
+    _reasonController.addListener(() => setState(() {}));
+  }
 
   @override
   void dispose() {
     _reasonController.dispose();
     super.dispose();
   }
+
+  Future<void> _loadReservations() async {
+  setState(() => _loading = true);
+  try {
+    final res = await SharedSpacesService().getReservations(widget.space.id, _selectedDate);
+    final slots = List.generate(10, (i) {
+        final h = (8 + i).toString().padLeft(2, '0');
+        return '$h:00';
+      });
+      if (!mounted) return;
+      setState(() {
+        _reservations = res;
+        _allSlots = slots;
+        _selectedSlot = null;
+        _loading = false;
+      });
+  } catch (_) {
+    if (!mounted) return;
+    setState(() => _loading = false);
+  }
+}
 
   @override
   Widget build(BuildContext context) {
@@ -155,28 +204,53 @@ class _AvailabilityPageState extends State<_AvailabilityPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('Fecha', style: TextStyle(fontSize: 14, color: AppColors.textMuted)),
+                  const Text('Fecha',
+                      style:
+                          TextStyle(fontSize: 14, color: AppColors.textMuted)),
                   const SizedBox(height: 8),
-                  Row(
-                    children: const [
-                      Icon(Icons.calendar_today_outlined, size: 16, color: AppColors.primary),
-                      SizedBox(width: 10),
-                      Text('Viernes, 31 de Mayo', style: TextStyle(fontSize: 14, color: AppColors.textMain, fontWeight: FontWeight.w600)),
-                    ],
+                  InkWell(
+                    onTap: _pickDate,
+                    child: Row(
+                      children: [
+                        const Icon(Icons.calendar_today_outlined,
+                            size: 16, color: AppColors.primary),
+                        const SizedBox(width: 10),
+                        Text(
+                          DateFormat('EEEE, d \'de\' MMMM', 'es')
+                              .format(_selectedDate),
+                          style: const TextStyle(
+                              fontSize: 14,
+                              color: AppColors.textMain,
+                              fontWeight: FontWeight.w600),
+                        ),
+                      ],
+                    ),
                   ),
                   const SizedBox(height: 20),
-                  const Text('Horarios disponibles', style: TextStyle(fontSize: 14, color: AppColors.textMuted)),
+                  const Text('Horarios disponibles',
+                      style:
+                          TextStyle(fontSize: 14, color: AppColors.textMuted)),
                   const SizedBox(height: 12),
-                  _slotGrid(),
+                  _loading
+                      ? const Center(
+                          child: Padding(
+                          padding: EdgeInsets.all(20),
+                          child: CircularProgressIndicator(
+                              color: Colors.white),
+                        ))
+                      : _slotGrid(),
                   const SizedBox(height: 20),
-                  const Text('Motivo de la reserva', style: TextStyle(fontSize: 14, color: AppColors.textMuted)),
+                  const Text('Motivo de la reserva',
+                      style:
+                          TextStyle(fontSize: 14, color: AppColors.textMuted)),
                   const SizedBox(height: 8),
                   TextFormField(
                     controller: _reasonController,
                     maxLines: 3,
                     decoration: const InputDecoration(
                       hintText: 'Ej. Clase de recuperación, conferencia...',
-                      hintStyle: TextStyle(fontSize: 13, color: AppColors.textMuted),
+                      hintStyle:
+                          TextStyle(fontSize: 13, color: AppColors.textMuted),
                     ),
                   ),
                 ],
@@ -187,20 +261,69 @@ class _AvailabilityPageState extends State<_AvailabilityPage> {
           SizedBox(
             width: double.infinity,
             child: ElevatedButton(
-              onPressed: _selected == null
+              onPressed: _selectedSlot == null || _reasonController.text.trim().isEmpty
                   ? null
-                  : () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Reserva solicitada ✓ (Pendiente de aprobación)'), backgroundColor: AppColors.primary),
-                      );
-                      Navigator.popUntil(context, (r) => r.isFirst || r.settings.name == '/');
-                    },
+                  : _confirmReserve,
               child: const Text('Confirmar Reserva'),
             ),
           ),
         ],
       ),
     );
+  }
+
+  Future<void> _pickDate() async {
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _selectedDate,
+      firstDate: DateTime.now(),
+      lastDate: DateTime.now().add(const Duration(days: 60)),
+      locale: const Locale('es'),
+    );
+    if (picked != null && picked != _selectedDate) {
+      setState(() => _selectedDate = picked);
+      _loadReservations();
+    }
+  }
+
+  Future<void> _confirmReserve() async {
+    try {
+      final teacherId = await getTeacherIdFromToken();
+      if (teacherId == null) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+              content: Text('Error: no se pudo identificar al usuario'),
+              backgroundColor: Colors.red),
+        );
+        return;
+      }
+      final start = '${_selectedSlot!}:00';
+      final hour = int.parse(_selectedSlot!.split(':')[0]);
+      final end = '${(hour + 1).toString().padLeft(2, '0')}:00:00';
+
+      await SharedSpacesService().reserveSpace(
+        widget.space.id,
+        teacherId,
+        _selectedDate,
+        start,
+        end,
+        _reasonController.text.trim(),
+      );
+
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+            content: Text('Reserva realizada con éxito ✓'),
+            backgroundColor: AppColors.primary),
+      );
+      Navigator.pop(context, true);
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.toString()), backgroundColor: Colors.red),
+      );
+    }
   }
 
   Widget _slotGrid() {
@@ -211,11 +334,11 @@ class _AvailabilityPageState extends State<_AvailabilityPage> {
       childAspectRatio: 2.5,
       crossAxisSpacing: 10,
       mainAxisSpacing: 10,
-      children: _slots.map((slot) {
-        final isTaken = _taken.contains(slot);
-        final isSelected = _selected == slot;
+      children: _allSlots.map((slot) {
+        final isTaken = _reservations.any((r) => r.startTime.substring(0, 5) == slot);
+        final isSelected = _selectedSlot == slot;
         return GestureDetector(
-          onTap: isTaken ? null : () => setState(() => _selected = slot),
+          onTap: isTaken ? null : () => setState(() => _selectedSlot = slot),
           child: Container(
             alignment: Alignment.center,
             decoration: BoxDecoration(

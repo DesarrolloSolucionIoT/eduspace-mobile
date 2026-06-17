@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../services/auth_service.dart';
 import '../../utils/token_utils.dart';
-import 'RegisterPage.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -41,7 +40,7 @@ class _LoginPageState extends State<LoginPage> {
 
       if (!mounted) return;
       // Routing por rol: admin → flujo de gestión; docente → shell con tabs.
-      final route = role == roleAdmin ? '/admin/home' : '/';
+      final route = role == roleAdmin ? '/admin/home' : '/shell';
       Navigator.pushReplacementNamed(context, route);
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -52,7 +51,9 @@ class _LoginPageState extends State<LoginPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return PopScope(
+      canPop: false,
+      child: Scaffold(
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
@@ -149,6 +150,7 @@ class _LoginPageState extends State<LoginPage> {
             ),
           ),
         ),
+      ),
       ),
     );
   }
