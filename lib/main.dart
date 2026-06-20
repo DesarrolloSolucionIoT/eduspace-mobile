@@ -1,4 +1,4 @@
-import 'package:eduspace_mobile/views/iam/LoginPage.dart';
+import 'package:eduspace_mobile/views/splash/SplashScreen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:intl/date_symbol_data_local.dart';
@@ -25,7 +25,7 @@ class MyApp extends StatelessWidget {
         GlobalCupertinoLocalizations.delegate,
       ],
       supportedLocales: const [Locale('es'), Locale('en')],
-      home: const LoginPage(),
+      home: const SplashScreen(),
       routes: appRoutes,
       debugShowCheckedModeBanner: false,
     );

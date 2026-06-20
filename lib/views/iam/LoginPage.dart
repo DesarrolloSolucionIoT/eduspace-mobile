@@ -106,6 +106,9 @@ class _LoginPageState extends State<LoginPage> {
                           ),
                         ),
                         keyboardType: TextInputType.emailAddress,
+                        textCapitalization: TextCapitalization.none,
+                        autocorrect: false,
+                        enableSuggestions: false,
                         validator: (value) {
                           if (value == null || value.isEmpty) {
                             return 'Por favor ingresa tu email';

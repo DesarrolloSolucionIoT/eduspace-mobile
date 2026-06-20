@@ -16,18 +16,22 @@ class MainShell extends StatefulWidget {
 class _MainShellState extends State<MainShell> {
   late int _currentIndex;
 
+  // Index del tab de Agenda dentro de _tabs.
+  static const _agendaIndex = 2;
+  final _agendaKey = GlobalKey<AgendaTabState>();
+
+  late final List<Widget> _tabs = [
+    const HomeTab(),
+    const IotTab(),
+    AgendaTab(key: _agendaKey),
+    const ProfileTab(),
+  ];
+
   @override
   void initState() {
     super.initState();
     _currentIndex = widget.initialIndex;
   }
-
-  static const _tabs = [
-    HomeTab(),
-    IotTab(),
-    AgendaTab(),
-    ProfileTab(),
-  ];
 
   @override
   Widget build(BuildContext context) {
@@ -38,7 +42,12 @@ class _MainShellState extends State<MainShell> {
       ),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,
-        onTap: (i) => setState(() => _currentIndex = i),
+        onTap: (i) {
+          setState(() => _currentIndex = i);
+          // La Agenda se mantiene viva en el IndexedStack, así que la recargamos
+          // al entrar para reflejar reservas/reuniones creadas en otros tabs.
+          if (i == _agendaIndex) _agendaKey.currentState?.reload();
+        },
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.home_outlined), activeIcon: Icon(Icons.home), label: 'Inicio'),
           BottomNavigationBarItem(icon: Icon(Icons.memory_outlined), activeIcon: Icon(Icons.memory), label: 'IoT'),

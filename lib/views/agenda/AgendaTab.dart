@@ -14,10 +14,10 @@ class AgendaTab extends StatefulWidget {
   const AgendaTab({super.key});
 
   @override
-  State<AgendaTab> createState() => _AgendaTabState();
+  AgendaTabState createState() => AgendaTabState();
 }
 
-class _AgendaTabState extends State<AgendaTab>
+class AgendaTabState extends State<AgendaTab>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
   Future<List<Meeting>>? _meetingsFuture;
@@ -28,6 +28,14 @@ class _AgendaTabState extends State<AgendaTab>
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
     _meetingsFuture = MeetingsService().getAllMeetings();
+    _loadReservations();
+  }
+
+  /// Recarga la información
+  void reload() {
+    setState(() {
+      _meetingsFuture = MeetingsService().getAllMeetings();
+    });
     _loadReservations();
   }
 
