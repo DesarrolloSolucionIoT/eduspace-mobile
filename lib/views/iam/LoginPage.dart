@@ -18,6 +18,7 @@ class _LoginPageState extends State<LoginPage> {
 
 
   Future<void> _login() async {
+    if (_loading) return; // evita dobles toques mientras hay una petición en curso
     if (!_formKey.currentState!.validate()) return;
     setState(() => _loading = true);
 
@@ -26,6 +27,8 @@ class _LoginPageState extends State<LoginPage> {
       _passwordController.text.trim(),
     );
 
+    // La petición es async: la pantalla pudo desmontarse mientras esperábamos.
+    if (!mounted) return;
     setState(() => _loading = false);
 
     if (result != null && result['token'] != null) {
@@ -47,6 +50,13 @@ class _LoginPageState extends State<LoginPage> {
         const SnackBar(content: Text('Credenciales incorrectas')),
       );
     }
+  }
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
   }
 
   @override
@@ -135,11 +145,20 @@ class _LoginPageState extends State<LoginPage> {
                             ),
                             padding: const EdgeInsets.symmetric(vertical: 16),
                           ),
-                          onPressed: _login,
-                          child: const Text(
-                            'Iniciar Sesión',
-                            style: TextStyle(fontSize: 18, color: Colors.white),
-                          ),
+                          onPressed: _loading ? null : _login,
+                          child: _loading
+                              ? const SizedBox(
+                                  height: 24,
+                                  width: 24,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: Colors.white,
+                                  ),
+                                )
+                              : const Text(
+                                  'Iniciar Sesión',
+                                  style: TextStyle(fontSize: 18, color: Colors.white),
+                                ),
                         ),
                       ),
                       const SizedBox(height: 32),

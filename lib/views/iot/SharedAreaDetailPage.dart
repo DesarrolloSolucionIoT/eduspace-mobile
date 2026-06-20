@@ -103,10 +103,32 @@ class SharedAreaDetailPage extends StatelessWidget {
             _infoRow(Icons.description_outlined, 'Descripción', space.description.isEmpty ? '—' : space.description),
             const Divider(height: 20, color: AppColors.border),
             _infoRow(Icons.sensors_outlined, 'Zona IoT', space.zoneId ?? 'No configurada'),
+            const Divider(height: 20, color: AppColors.border),
+            _infoRow(Icons.memory, 'Dispositivo', sensors?.deviceId ?? '--'),
+            const Divider(height: 20, color: AppColors.border),
+            _infoRow(Icons.schedule, 'Última lectura', _lastReadingText()),
           ],
         ),
       ),
     );
+  }
+
+  /// Hora de la última lectura + cuánto tiempo pasó (ej: "08:31:42 · hace 3 h 58 m").
+  String _lastReadingText() {
+    final dt = sensors?.recordedAt ?? sensors?.receivedAt;
+    if (dt == null) return 'Sin datos';
+    final local = dt.toLocal();
+    final time = '${_two(local.hour)}:${_two(local.minute)}:${_two(local.second)}';
+    return '$time · ${_relative(DateTime.now().difference(local))}';
+  }
+
+  String _two(int n) => n.toString().padLeft(2, '0');
+
+  String _relative(Duration d) {
+    if (d.isNegative || d.inMinutes < 1) return 'hace instantes';
+    if (d.inHours < 1) return 'hace ${d.inMinutes} m';
+    if (d.inDays < 1) return 'hace ${d.inHours} h ${d.inMinutes % 60} m';
+    return 'hace ${d.inDays} d';
   }
 
   Widget _infoRow(IconData icon, String label, String value) {

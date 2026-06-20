@@ -1,4 +1,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Requerido para que la app acceda a la red (API del backend) en TODAS las
+         builds, incluida release/producción. En debug Flutter lo añade solo, pero
+         en release hay que declararlo aquí o no habrá conexión. -->
+    <uses-permission android:name="android.permission.INTERNET"/>
     <application
         android:label="eduspace_mobile"
         android:name="${applicationName}"

@@ -3,7 +3,6 @@ import '../../config/AppTheme.dart';
 import '../../widgets/gradient_scaffold.dart';
 import '../../models/classroom.dart';
 import '../../models/sensor_reading.dart';
-import '../breakdown/ReportBreakdownPage.dart';
 
 class ClassroomDetailPage extends StatelessWidget {
   final Classroom classroom;
@@ -49,19 +48,10 @@ class ClassroomDetailPage extends StatelessWidget {
           _trendCard('Temperatura', Icons.thermostat_outlined, AppColors.sensorTemp, '${sensors?.temperature?.toStringAsFixed(0) ?? '--'}°C', _tempTrend),
           _trendCard('Humedad', Icons.water_drop_outlined, AppColors.sensorHumidity, '${sensors?.humidity?.toStringAsFixed(0) ?? '--'}%', _humidityTrend),
           const SizedBox(height: 12),
-          const Text('Eventos Recientes', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+          const Text('Información del Sensor', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
           const SizedBox(height: 12),
-          _eventsCard(),
+          _deviceInfoCard(),
           const SizedBox(height: 20),
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton.icon(
-              onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => ReportBreakdownPage(spaceName: classroom.name))),
-              icon: const Icon(Icons.warning_amber_outlined),
-              label: const Text('Reportar Avería'),
-              style: ElevatedButton.styleFrom(backgroundColor: AppColors.danger),
-            ),
-          ),
         ],
       ),
     );
@@ -169,32 +159,59 @@ class ClassroomDetailPage extends StatelessWidget {
     );
   }
 
-  Widget _eventsCard() {
+  Widget _deviceInfoCard() {
     return Card(
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
         child: Column(
           children: [
-            _eventRow(Icons.lightbulb_outline, const Color(0xFFECC94B), 'Luces encendidas', '08:00 AM'),
+            _infoRow(Icons.memory, 'Dispositivo', sensors?.deviceId ?? '--'),
             const Divider(height: 1, color: AppColors.border),
-            _eventRow(Icons.air, AppColors.primary, 'Aire acondicionado activo', '08:15 AM'),
+            _infoRow(Icons.place_outlined, 'Zona', sensors?.zoneId ?? '--'),
+            const Divider(height: 1, color: AppColors.border),
+            _infoRow(Icons.schedule, 'Última lectura', _lastReadingText()),
           ],
         ),
       ),
     );
   }
 
-  Widget _eventRow(IconData icon, Color color, String text, String time) {
+  Widget _infoRow(IconData icon, String label, String value) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 12),
       child: Row(
         children: [
-          Icon(icon, size: 18, color: color),
+          Icon(icon, size: 18, color: AppColors.primary),
           const SizedBox(width: 10),
-          Expanded(child: Text(text, style: const TextStyle(fontSize: 13, color: AppColors.textMain))),
-          Text(time, style: const TextStyle(fontSize: 12, color: AppColors.textMuted)),
+          Text(label, style: const TextStyle(fontSize: 13, color: AppColors.textMuted)),
+          const Spacer(),
+          Flexible(
+            child: Text(
+              value,
+              textAlign: TextAlign.right,
+              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.textMain),
+            ),
+          ),
         ],
       ),
     );
+  }
+
+  /// Hora de la última lectura + cuánto tiempo pasó (ej: "08:31:42 · hace 3 h 58 m").
+  String _lastReadingText() {
+    final dt = sensors?.recordedAt ?? sensors?.receivedAt;
+    if (dt == null) return 'Sin datos';
+    final local = dt.toLocal();
+    final time = '${_two(local.hour)}:${_two(local.minute)}:${_two(local.second)}';
+    return '$time · ${_relative(DateTime.now().difference(local))}';
+  }
+
+  String _two(int n) => n.toString().padLeft(2, '0');
+
+  String _relative(Duration d) {
+    if (d.isNegative || d.inMinutes < 1) return 'hace instantes';
+    if (d.inHours < 1) return 'hace ${d.inMinutes} m';
+    if (d.inDays < 1) return 'hace ${d.inHours} h ${d.inMinutes % 60} m';
+    return 'hace ${d.inDays} d';
   }
 }

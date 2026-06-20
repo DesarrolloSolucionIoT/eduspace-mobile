@@ -100,7 +100,7 @@ class _ProfileTabState extends State<ProfileTab> {
               Icons.person_outline,
               'Datos Personales',
               () => Navigator.push(context, MaterialPageRoute(builder: (_) => PersonalDataPage(teacher: teacher)))
-                  .then((_) => setState(() => _teacherFuture = _loadTeacher())),
+                  .then((_) => setState(() { _teacherFuture = _loadTeacher(); })),
             ),
             _menuItem(
               context,
