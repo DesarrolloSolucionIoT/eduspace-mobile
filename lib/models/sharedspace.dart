@@ -3,12 +3,14 @@ class SharedSpace {
   final String name;
   final int capacity;
   final String description;
+  final String? zoneId;
 
   SharedSpace({
     required this.id,
     required this.name,
     required this.capacity,
     required this.description,
+    this.zoneId,
   });
 
   factory SharedSpace.fromJson(Map<String, dynamic> json) {
@@ -17,6 +19,7 @@ class SharedSpace {
       name: json['name'] as String,
       capacity: json['capacity'] as int,
       description: json['description'] as String,
+      zoneId: json['zoneId'] as String?,
     );
   }
 

@@ -21,6 +21,12 @@ static const String baseUrl = "http://10.0.2.2:5204/api/v1";
   // Classroom endpoints
   static const String classrooms = '$baseUrl/classrooms';
 
+  // Resource endpoints (scoped to a classroom)
+  static String resourcesByClassroom(int classroomId) => '$classrooms/$classroomId/resources';
+
+  // Breakdown report endpoints
+  static const String reports = '$baseUrl/reports';
+
   // Shared Spaces endpoints
   static const String sharedSpaces = '$baseUrl/shared-area';
 
@@ -28,7 +34,7 @@ static const String baseUrl = "http://10.0.2.2:5204/api/v1";
   static const String meetings = '$baseUrl/meetings';
 
   // IoT Monitoring endpoints
-  static const String sensorReadings = '$baseUrl/sensor-readings';
+  static const String sensorReadings = '$baseUrl/iot-monitoring/sensor-readings';
   static String latestReadingByZone(String zoneId) => '$sensorReadings/zone/$zoneId/latest';
   static String readingsByZone(String zoneId) => '$sensorReadings/zone/$zoneId';
 }

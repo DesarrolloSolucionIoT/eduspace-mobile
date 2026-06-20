@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import '../../config/AppTheme.dart';
 import '../../widgets/gradient_scaffold.dart';
+import '../../services/report_service.dart';
 
 class ReportBreakdownPage extends StatefulWidget {
   final String? spaceName;
   final String? resourceName;
+  final int? resourceId;
 
-  const ReportBreakdownPage({super.key, this.spaceName, this.resourceName});
+  const ReportBreakdownPage({super.key, this.spaceName, this.resourceName, this.resourceId});
 
   @override
   State<ReportBreakdownPage> createState() => _ReportBreakdownPageState();
@@ -14,8 +16,10 @@ class ReportBreakdownPage extends StatefulWidget {
 
 class _ReportBreakdownPageState extends State<ReportBreakdownPage> {
   final _descController = TextEditingController();
+  final _reportService = ReportService();
   String _category = 'Infraestructura';
   String _priority = 'Media';
+  bool _sending = false;
 
   final _categories = ['Infraestructura', 'Equipos', 'Mobiliario', 'Conectividad', 'Otro'];
   final _priorities = ['Baja', 'Media', 'Alta', 'Urgente'];
@@ -75,9 +79,11 @@ class _ReportBreakdownPageState extends State<ReportBreakdownPage> {
           SizedBox(
             width: double.infinity,
             child: ElevatedButton.icon(
-              onPressed: _submit,
-              icon: const Icon(Icons.send_outlined),
-              label: const Text('Enviar Reporte'),
+              onPressed: _sending ? null : _submit,
+              icon: _sending
+                  ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                  : const Icon(Icons.send_outlined),
+              label: Text(_sending ? 'Enviando...' : 'Enviar Reporte'),
               style: ElevatedButton.styleFrom(backgroundColor: AppColors.danger),
             ),
           ),
@@ -86,11 +92,46 @@ class _ReportBreakdownPageState extends State<ReportBreakdownPage> {
     );
   }
 
-  void _submit() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Reporte enviado ✓'), backgroundColor: AppColors.primary),
-    );
-    Navigator.pop(context);
+  Future<void> _submit() async {
+    if (widget.resourceId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Para reportar una avería, abre el reporte desde un recurso específico.'),
+          backgroundColor: AppColors.danger,
+        ),
+      );
+      return;
+    }
+    if (_descController.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Describe el problema antes de enviar.'), backgroundColor: AppColors.danger),
+      );
+      return;
+    }
+
+    setState(() => _sending = true);
+    try {
+      await _reportService.createReport(
+        kindOfReport: _category,
+        description: '[Prioridad: $_priority] ${_descController.text.trim()}',
+        resourceId: widget.resourceId!,
+      );
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Reporte enviado ✓'), backgroundColor: AppColors.primary),
+      );
+      Navigator.pop(context);
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(e.toString().replaceFirst('Exception: ', '')),
+          backgroundColor: AppColors.danger,
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _sending = false);
+    }
   }
 
   Widget _label(String text) => Text(text, style: const TextStyle(fontSize: 14, color: AppColors.textMuted));

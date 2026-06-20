@@ -17,8 +17,7 @@ class IotService {
       if (response.statusCode == 200) {
         return SensorReading.fromJson(json.decode(response.body) as Map<String, dynamic>);
       }
-      if (response.statusCode == 404) return null;
-      throw Exception('Error ${response.statusCode} al obtener lectura de zona $zoneId');
+      return null; // 404 = zona sin lecturas
     } catch (_) {
       return null;
     }

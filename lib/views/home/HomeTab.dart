@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import '../../config/AppTheme.dart';
 import '../../widgets/gradient_scaffold.dart';
 import '../../services/teachers_service.dart';
+import '../../services/meetings_service.dart';
+import '../../services/classroom_service.dart';
 import '../../models/teacher.dart';
+import '../../models/meeting.dart';
 import '../../utils/token_utils.dart';
 import '../notifications/NotificationsPage.dart';
-import '../breakdown/ReportBreakdownPage.dart';
 import '../agenda/SpaceBookingPage.dart';
 
 class HomeTab extends StatefulWidget {
@@ -17,11 +19,13 @@ class HomeTab extends StatefulWidget {
 
 class _HomeTabState extends State<HomeTab> {
   Future<Teacher?>? _teacherFuture;
+  Future<({Meeting meeting, String room})?>? _nextMeetingFuture;
 
   @override
   void initState() {
     super.initState();
     _teacherFuture = _loadTeacher();
+    _nextMeetingFuture = _loadNextMeeting();
   }
 
   Future<Teacher?> _loadTeacher() async {
@@ -32,6 +36,41 @@ class _HomeTabState extends State<HomeTab> {
     } catch (_) {
       return null;
     }
+  }
+
+  /// Next upcoming meeting (soonest date+time after now), with its classroom name resolved.
+  Future<({Meeting meeting, String room})?> _loadNextMeeting() async {
+    try {
+      final meetings = await MeetingsService().getAllMeetings();
+      final now = DateTime.now();
+      final upcoming = meetings
+          .map((m) => (m: m, dt: DateTime.tryParse('${m.date}T${m.start}')))
+          .where((e) => e.dt != null && e.dt!.isAfter(now))
+          .toList()
+        ..sort((a, b) => a.dt!.compareTo(b.dt!));
+      if (upcoming.isEmpty) return null;
+      final next = upcoming.first.m;
+
+      var room = 'Aula ${next.classroomId}';
+      try {
+        final classrooms = await ClassroomService().getAllClassrooms();
+        final match = classrooms.where((c) => c.id == next.classroomId);
+        if (match.isNotEmpty) room = match.first.name;
+      } catch (_) {}
+
+      return (meeting: next, room: room);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  String _formatTime(String start) => start.length >= 5 ? start.substring(0, 5) : start;
+
+  String _formatDate(String date) {
+    final dt = DateTime.tryParse(date);
+    if (dt == null) return date;
+    const months = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
+    return '${dt.day} ${months[dt.month - 1]}';
   }
 
   @override
@@ -92,10 +131,6 @@ class _HomeTabState extends State<HomeTab> {
             Expanded(child: _buildQuickAction(context, Icons.add_circle_outline, AppColors.secondary, 'Nueva Reserva', () {
               Navigator.push(context, MaterialPageRoute(builder: (_) => const SpaceBookingPage()));
             })),
-            const SizedBox(width: 14),
-            Expanded(child: _buildQuickAction(context, Icons.warning_amber_outlined, AppColors.danger, 'Reportar Avería', () {
-              Navigator.push(context, MaterialPageRoute(builder: (_) => const ReportBreakdownPage()));
-            })),
           ],
         ),
       ],
@@ -103,25 +138,43 @@ class _HomeTabState extends State<HomeTab> {
   }
 
   Widget _buildNextClassCard() {
-    return Card(
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('PRÓXIMA CLASE', style: TextStyle(fontSize: 11, color: Colors.grey[500], fontWeight: FontWeight.w600, letterSpacing: 1)),
-            const SizedBox(height: 8),
-            const Text('Sistemas Embebidos', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: AppColors.primary)),
-            const SizedBox(height: 6),
-            Row(children: [
-              const Icon(Icons.location_on_outlined, size: 15, color: AppColors.textMuted),
-              const SizedBox(width: 4),
-              Text('Aula L-204 • 10:00 AM', style: TextStyle(fontSize: 14, color: Colors.grey[600])),
-            ]),
-          ],
-        ),
-      ),
+    return FutureBuilder<({Meeting meeting, String room})?>(
+      future: _nextMeetingFuture,
+      builder: (context, snap) {
+        final loading = snap.connectionState == ConnectionState.waiting;
+        final data = snap.data;
+        final title = data != null
+            ? data.meeting.title
+            : (loading ? 'Cargando...' : 'Sin reuniones próximas');
+
+        return Card(
+          child: Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('PRÓXIMA REUNIÓN', style: TextStyle(fontSize: 11, color: Colors.grey[500], fontWeight: FontWeight.w600, letterSpacing: 1)),
+                const SizedBox(height: 8),
+                Text(title, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: AppColors.primary)),
+                if (data != null) ...[
+                  const SizedBox(height: 6),
+                  Row(children: [
+                    const Icon(Icons.location_on_outlined, size: 15, color: AppColors.textMuted),
+                    const SizedBox(width: 4),
+                    Expanded(
+                      child: Text(
+                        '${data.room} • ${_formatDate(data.meeting.date)} ${_formatTime(data.meeting.start)}',
+                        style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+                      ),
+                    ),
+                  ]),
+                ],
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 

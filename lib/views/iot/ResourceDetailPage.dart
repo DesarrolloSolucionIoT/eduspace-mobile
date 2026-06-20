@@ -47,7 +47,7 @@ class ResourceDetailPage extends StatelessWidget {
           SizedBox(
             width: double.infinity,
             child: ElevatedButton.icon(
-              onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => ReportBreakdownPage(spaceName: resource.location, resourceName: resource.name))),
+              onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => ReportBreakdownPage(spaceName: resource.location, resourceName: resource.name, resourceId: resource.id))),
               icon: const Icon(Icons.warning_amber_outlined),
               label: const Text('Reportar Avería'),
               style: ElevatedButton.styleFrom(backgroundColor: AppColors.danger),

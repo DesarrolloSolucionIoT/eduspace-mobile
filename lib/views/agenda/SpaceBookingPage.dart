@@ -113,7 +113,14 @@ class _SpaceBookingPageState extends State<SpaceBookingPage> {
           SizedBox(
             width: double.infinity,
             child: ElevatedButton(
-              onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => _AvailabilityPage(space: space))),
+              onPressed: () async {
+                final result = await Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => _AvailabilityPage(space: space)),
+                );
+                // Propagate the booking success up to AgendaTab so its list refreshes.
+                if (result == true && context.mounted) Navigator.pop(context, true);
+              },
               style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 12)),
               child: const Text('Ver Disponibilidad', style: TextStyle(fontSize: 14)),
             ),

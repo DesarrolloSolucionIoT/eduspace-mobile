@@ -1,6 +1,6 @@
 class SensorReading {
   final int? id;
-  final String? edgeReadingId;
+  final int? edgeReadingId;
   final String? deviceId;
   final String? zoneId;
   final double? temperature;
@@ -26,7 +26,7 @@ class SensorReading {
   factory SensorReading.fromJson(Map<String, dynamic> json) {
     return SensorReading(
       id: json['id'] as int?,
-      edgeReadingId: json['edgeReadingId'] as String?,
+      edgeReadingId: json['edgeReadingId'] as int?,
       deviceId: json['deviceId'] as String?,
       zoneId: json['zoneId'] as String?,
       temperature: (json['temperature'] as num?)?.toDouble(),
